@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .message { padding: 10px; margin-bottom: 15px; border-radius: 5px; display: none; }
+        .message.error { background: #fee; color: #c00; display: block; }
+        .message.success { background: #efe; color: #060; display: block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Register</h1>
+        <div id="message" class="message"></div>
+        <form id="registerForm">
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="email" required>
+            </div>
+            <div class="form-group">
+                <label>Password (min 6 characters)</label>
+                <input type="password" id="password" required>
+            </div>
+            <div class="form-group">
+                <label>Confirm Password</label>
+                <input type="password" id="confirmPassword" required>
+            </div>
+            <button type="submit" class="btn">Register</button>
+        </form>
+        <p style="text-align: center; margin-top: 20px;">
+            Already have an account? <a href="login.html">Login</a>
+        </p>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
