@@ -67,18 +67,45 @@ body.dashboard {
     padding: 0;
 }
 
+/* Transactions and other full-page layouts should behave like dashboard */
+body.transactions-page {
+    display: block;
+    padding: 0;
+}
+
 .navbar {
     background: #5cb85c;
     color: white;
     padding: 15px 20px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
+    width: 100%;
 }
 
 .navbar .btn {
     width: auto;
     padding: 8px 20px;
     margin: 0;
+}
+
+/* Keep most form buttons full-width, but allow inline buttons in nav/back areas */
+.btn {
+    /* original full-width behavior kept for forms */
+    display: inline-block;
+    text-align: center;
+}
+
+.form .btn,
+form .btn {
+    width: 100%;
+}
+
+/* Inline buttons inside dashboard links and small controls */
+.dashboard-links .btn,
+.back .btn {
+    width: auto;
 }
 
 .content {
@@ -93,4 +120,131 @@ body.dashboard {
     padding: 20px;
     margin-bottom: 20px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Transactions list styles */
+.transactions {
+    list-style: none;
+    margin-top: 10px;
+}
+.transactions .tx {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+/* History table */
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.history-table th,
+.history-table td {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+}
+.history-table thead th {
+    background: #f6f6f6;
+}
+
+/* History filter bar */
+.filter-bar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: nowrap; /* keep controls on the same line */
+    margin-bottom: 12px;
+    overflow-x: auto; /* allow horizontal scroll on very small screens */
+    padding-bottom: 6px;
+}
+.filter-bar label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.95rem;
+    color: #333;
+    white-space: nowrap;
+}
+.filter-bar select,
+.filter-bar input[type="search"] {
+    padding: 6px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+.filter-bar #clearFilters {
+    margin-left: auto; /* push clear button to the far right */
+    padding: 8px 12px;
+    flex: 0 0 auto;
+}
+
+.filter-bar #exportPdf {
+    padding: 8px 12px;
+}
+
+/* Keyword label should take remaining space so input won't overlap Clear */
+.filter-bar .filter-keyword { flex: 1 1 200px; min-width: 120px; }
+.filter-bar .filter-keyword input { width: 100%; box-sizing: border-box; }
+
+/* Keep other controls compact */
+.filter-bar > label:not(.filter-keyword) { flex: 0 0 auto; }
+.filter-bar select { min-width: 120px; }
+.filter-bar .btn { width: auto; }
+
+@media (max-width: 440px) {
+    /* allow horizontal scroll; smaller min widths */
+    .filter-bar select { min-width: 90px; }
+    .filter-bar .filter-keyword { min-width: 90px; }
+}
+
+/* Transaction form spacing: add gaps between inputs and text for readability */
+.transaction-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* space between inputs/select/button */
+    align-items: stretch;
+}
+
+.transaction-form input,
+.transaction-form select,
+.transaction-form button {
+    width: 100%;
+}
+
+.transactions .tx .tx-left strong {
+    display: block;
+    margin-bottom: 6px;
+}
+.transactions .tx .tx-left small {
+    display: block;
+    margin-top: 4px;
+    color: #666;
+}
+
+/* Slight spacing between amount/type and delete button */
+.transactions .tx .tx-right button {
+    margin-left: 8px;
+}
+
+/* Totals summary: add visible border and spacing */
+.totals {
+    border: 1px solid #e6e6e6;
+    padding: 12px;
+    border-radius: 8px;
+    background: #ffffff;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: flex-start;
+    margin: 12px 0;
+}
+.totals p {
+    margin: 0;
+    color: #333;
+}
+.totals p strong {
+    display: block;
+    font-size: 1.05rem;
+    color: #2d5016;
 }
