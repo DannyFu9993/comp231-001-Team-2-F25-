@@ -28,6 +28,35 @@ pool.getConnection()
   })
   .catch(err => console.error('Database connection failed:', err));
 
+// Ensure transactions table exists
+(async function ensureSchema() {
+  try {
+    // Ensure users table exists (used by auth)
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        password VARCHAR(255) NOT NULL
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+    console.log('Ensured users table exists');
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS transactions (
+        id BIGINT PRIMARY KEY AUTO_INCREMENT,
+        user_email VARCHAR(255) NOT NULL,
+        description VARCHAR(1000) NOT NULL,
+        amount DECIMAL(14,2) NOT NULL,
+        type ENUM('income','expense') NOT NULL,
+        date DATETIME NOT NULL,
+        INDEX (user_email)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+    console.log('Ensured transactions table exists');
+  } catch (err) {
+    console.error('Failed to ensure schema:', err);
+  }
+})();
+
 // In-memory session store (use Redis or database for production)
 const sessions = new Map();
 
@@ -126,6 +155,53 @@ app.post('/api/auth/logout', verifyToken, (req, res) => {
 
 app.get('/api/test', (req, res) => {
   res.json({ message: 'Hello from Express!' });
+});
+
+// Transactions endpoints
+// Get all transactions for the authenticated user
+app.get('/api/transactions', verifyToken, async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT id, description, amount, type, date FROM transactions WHERE user_email = ? ORDER BY date DESC', [req.userEmail]);
+    res.json({ transactions: rows });
+  } catch (err) {
+    console.error('Error fetching transactions:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Create a transaction
+app.post('/api/transactions', verifyToken, async (req, res) => {
+  try {
+    const { description, amount, type, date } = req.body;
+    if (!description || !amount || !type) {
+      return res.status(400).json({ message: 'Missing fields' });
+    }
+
+    const dt = date ? new Date(date) : new Date();
+
+    const [result] = await pool.execute(
+      'INSERT INTO transactions (user_email, description, amount, type, date) VALUES (?, ?, ?, ?, ?)',
+      [req.userEmail, description, amount, type, dt]
+    );
+
+    res.status(201).json({ id: result.insertId, description, amount, type, date: dt });
+  } catch (err) {
+    console.error('Error creating transaction:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Delete a transaction by id (only if it belongs to the user)
+app.delete('/api/transactions/:id', verifyToken, async (req, res) => {
+  try {
+    const id = req.params.id;
+    const [result] = await pool.execute('DELETE FROM transactions WHERE id = ? AND user_email = ?', [id, req.userEmail]);
+    if (result.affectedRows === 0) return res.status(404).json({ message: 'Transaction not found' });
+    res.json({ message: 'Deleted' });
+  } catch (err) {
+    console.error('Error deleting transaction:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
 app.listen(PORT, () => {

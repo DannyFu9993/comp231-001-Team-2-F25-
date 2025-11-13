@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transactions</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="transactions-page">
+    <div class="navbar">
+        <h2>Budget App</h2>
+        <button class="btn" id="logoutBtn">Logout</button>
+    </div>
+
+    <div class="content">
+        <div class="card">
+            <h1>Transactions</h1>
+            <p>Email: <strong id="userEmail"></strong></p>
+        </div>
+
+        <div class="card">
+            <section class="transaction-panel">
+                <form id="transactionForm" class="transaction-form">
+                    <input id="description" type="text" placeholder="Description" required />
+                    <input id="amount" type="number" step="0.01" placeholder="Amount" required />
+                    <select id="type">
+                        <option value="income">Income</option>
+                        <option value="expense">Expense</option>
+                    </select>
+                    <button type="submit" class="btn">Add</button>
+                </form>
+                <div id="txMessage" class="message"></div>
+
+                <div class="totals">
+                    <p>Income: <strong id="totalIncome">0.00</strong></p>
+                    <p>Expenses: <strong id="totalExpense">0.00</strong></p>
+                    <p>Balance: <strong id="totalBalance">0.00</strong></p>
+                </div>
+
+                <h4>Transactions</h4>
+                <ul id="transactionsList" class="transactions"></ul>
+
+                <div class="back">
+                    <a class="btn" href="dashboard.html">Back to Dashboard</a>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

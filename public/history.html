@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction History</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="transactions-page">
+    <div class="navbar">
+        <h2>Budget App</h2>
+        <button class="btn" id="logoutBtn">Logout</button>
+    </div>
+
+    <div class="content">
+        <div class="card">
+            <h1>Transaction History</h1>
+            <p>Email: <strong id="userEmail"></strong></p>
+        </div>
+
+        <div class="card">
+            <div class="filter-bar">
+                <label>Type:
+                    <select id="filterType">
+                        <option value="all">All</option>
+                        <option value="income">Income</option>
+                        <option value="expense">Expense</option>
+                    </select>
+                </label>
+
+                <label>Time:
+                    <select id="filterTime">
+                        <option value="all">All</option>
+                        <option value="week">Last 7 days</option>
+                        <option value="month">Last 30 days</option>
+                        <option value="year">Last 365 days</option>
+                    </select>
+                </label>
+
+                <label class="filter-keyword">Keyword:
+                    <input id="filterKeyword" type="search" placeholder="Search description..." />
+                </label>
+
+                <button class="btn" id="exportPdf">Export PDF</button>
+                <button class="btn" id="clearFilters">Clear</button>
+            </div>
+
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Amount</th>
+                        <th>Type</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody id="historyBody"></tbody>
+            </table>
+
+            <div class="back">
+                <a class="btn" href="dashboard.html">Back to Dashboard</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <!-- jsPDF and autotable for client-side PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+</body>
+</html>
