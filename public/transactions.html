@@ -7,10 +7,21 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="transactions-page">
-    <div class="navbar">
-        <h2>Budget App</h2>
-        <button class="btn" id="logoutBtn">Logout</button>
-    </div>
+    <nav class="main-nav">
+        <div class="nav-left">
+            <img src="assets/logo.png" alt="Logo" class="nav-logo">
+            <span class="nav-title">Budget & Expense</span>
+        </div>
+    
+        <div class="nav-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="transactions.html">Transactions</a>
+            <a href="history.html">History</a>
+            <a href="summary.html">Summary</a>
+            <button id="logoutBtn" class="btn small">Logout</button>
+        </div>
+    </nav>
+    
 
     <div class="content">
         <div class="card">
@@ -39,10 +50,6 @@
 
                 <h4>Transactions</h4>
                 <ul id="transactionsList" class="transactions"></ul>
-
-                <div class="back">
-                    <a class="btn" href="dashboard.html">Back to Dashboard</a>
-                </div>
             </section>
         </div>
     </div>

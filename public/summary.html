@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Summary</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Tabs */
+    .summary-tabs {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 15px;
+      border-bottom: 2px solid #eee;
+    }
+    .summary-tabs div {
+      padding: 10px 20px;
+      font-weight: bold;
+      color: #444;
+      cursor: pointer;
+    }
+    .summary-tabs .active {
+      color: #007bff;
+      border-bottom: 3px solid #007bff;
+    }
+
+    /* Time filters */
+    .time-filters {
+      display: flex;
+      gap: 10px;
+      padding: 10px;
+      overflow-x: auto;
+      margin-top: 10px;
+    }
+    .time-filters button {
+      padding: 6px 18px;
+      border: none;
+      border-radius: 20px;
+      background: #eee;
+      color: #333;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .time-filters .active {
+      background: #007bff;
+      color: white;
+    }
+
+    /* Chart Container */
+    .donut-container {
+      margin: 20px auto;
+      width: 90%;
+      max-width: 380px;
+    }
+
+    /* Category Table */
+    .summary-table {
+      width: 100%;
+      margin-top: 10px;
+      border-collapse: collapse;
+    }
+    .summary-table th, .summary-table td {
+      padding: 8px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+
+    .summary-total {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #c70000;
+      margin-top: 12px;
+      text-align: center;
+    }
+  </style>
+
+</head>
+<body class="transactions-page">
+  <nav class="main-nav">
+    <div class="nav-left">
+        <img src="assets/logo.png" alt="Logo" class="nav-logo">
+        <span class="nav-title">Budget & Expense</span>
+    </div>
+
+    <div class="nav-links">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="transactions.html">Transactions</a>
+        <a href="history.html">History</a>
+        <a href="summary.html">Summary</a>
+        <button id="logoutBtn" class="btn small">Logout</button>
+    </div>
+</nav>
+
+  <!-- GLOBAL NAVBAR WILL BE HERE -->
+
+  <div class="content">
+
+    <div class="card">
+      <h1>View Summary</h1>
+      <p>Email: <strong id="userEmail"></strong></p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="summary-tabs">
+      <div class="tab-btn active" data-type="summary">SUMMARY</div>
+      <div class="tab-btn" data-type="expense">EXPENSE</div>
+      <div class="tab-btn" data-type="income">INCOME</div>
+    </div>
+
+    <!-- Time Filters -->
+    <div class="time-filters">
+      <button class="filter-btn active" data-range="all">All</button>
+      <button class="filter-btn" data-range="daily">Daily</button>
+      <button class="filter-btn" data-range="weekly">Weekly</button>
+      <button class="filter-btn" data-range="monthly">Monthly</button>
+      <button class="filter-btn" data-range="yearly">Yearly</button>
+    </div>
+
+    <!-- Chart -->
+    <div class="card donut-container">
+      <canvas id="categoryChart"></canvas>
+    </div>
+
+    <!-- Category Table -->
+    <div class="card">
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Amount</th>
+            <th>%</th>
+          </tr>
+        </thead>
+        <tbody id="categoryTableBody"></tbody>
+      </table>
+      <div class="summary-total" id="summaryTotal"></div>
+    </div>
+
+  </div>
+
+  <script>
+    const token = localStorage.getItem("token");
+    const API_URL = "http://localhost:5000/api";
+
+    const userEmailEl = document.getElementById("userEmail");
+    userEmailEl.textContent = localStorage.getItem("email") || "";
+
+    let allTx = [];
+    let currentType = "summary"; 
+    let currentRange = "all";
+    let chart;
+
+    // Load all transactions
+    async function loadTransactions() {
+      const res = await fetch(`${API_URL}/transactions`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      const data = await res.json();
+      allTx = data.transactions || [];
+      updateChart();
+    }
+
+    // Time range filtering
+    function filterByRange(tx) {
+      const date = new Date(tx.date);
+      const now = new Date();
+      const diff = now - date;
+      const day = 86400000;
+
+      switch (currentRange) {
+        case "daily": return diff <= day;
+        case "weekly": return diff <= 7 * day;
+        case "monthly": return diff <= 30 * day;
+        case "yearly": return diff <= 365 * day;
+        default: return true;
+      }
+    }
+
+    // Calculate data for selected tab + range
+    function prepareData() {
+      let filtered = allTx.filter(filterByRange);
+
+      if (currentType === "income")
+        filtered = filtered.filter(x => x.type === "income");
+      if (currentType === "expense")
+        filtered = filtered.filter(x => x.type === "expense");
+
+      // Group by category
+      const categories = {};
+      filtered.forEach(tx => {
+        if (!categories[tx.description]) categories[tx.description] = 0;
+        categories[tx.description] += Number(tx.amount);
+      });
+
+      return categories;
+    }
+
+    // Draw donut chart + table
+    function updateChart() {
+      const data = prepareData();
+      const labels = Object.keys(data);
+      const values = Object.values(data);
+      const total = values.reduce((a, b) => a + b, 0);
+
+      // Update table
+      const tbody = document.getElementById("categoryTableBody");
+      tbody.innerHTML = "";
+      labels.forEach((cat, i) => {
+        const percent = ((values[i] / total) * 100).toFixed(2);
+        tbody.innerHTML += `
+          <tr>
+            <td>${cat}</td>
+            <td>$${values[i]}</td>
+            <td>${percent}%</td>
+          </tr>
+        `;
+      });
+
+      // Update total
+      document.getElementById("summaryTotal").textContent =
+        `${currentType.toUpperCase()} Total: $${total}`;
+
+      // Render donut chart
+      if (chart) chart.destroy();
+      const ctx = document.getElementById("categoryChart").getContext("2d");
+
+      chart = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+          labels,
+          datasets: [{
+            data: values,
+            backgroundColor: ["#8ef57a","#f4e97a","#7ac4f5","#f57a7a","#c57af5"],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          plugins: {
+            legend: { position: "bottom" },
+            tooltip: { enabled: true }
+          },
+          cutout: "60%"
+        }
+      });
+    }
+
+    // Tab switching
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelector(".tab-btn.active").classList.remove("active");
+        btn.classList.add("active");
+        currentType = btn.dataset.type;
+        updateChart();
+      });
+    });
+
+    // Time filter switching
+    document.querySelectorAll(".filter-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelector(".filter-btn.active").classList.remove("active");
+        btn.classList.add("active");
+        currentRange = btn.dataset.range;
+        updateChart();
+      });
+    });
+
+    loadTransactions();
+  </script>
+
+</body>
+</html>
