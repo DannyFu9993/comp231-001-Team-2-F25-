@@ -4,6 +4,58 @@
     box-sizing: border-box;
 }
 
+/* =========================================
+   GLOBAL NAVBAR
+========================================= */
+.main-nav {
+    background: #4f9f5c;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    color: #fff;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.nav-logo {
+    height: 65px;
+    width: auto;
+}
+
+.nav-title {
+    font-size: 1.3rem;
+    font-weight: bold;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.nav-links a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 1rem;
+}
+
+.nav-links a:hover {
+    text-decoration: underline;
+}
+
+.btn.small {
+    padding: 6px 12px;
+    width: auto;
+    background: #2f6f38;
+}
+
 body {
     font-family: Arial, sans-serif;
     min-height: 100vh;
@@ -248,3 +300,4 @@ form .btn {
     font-size: 1.05rem;
     color: #2d5016;
 }
+

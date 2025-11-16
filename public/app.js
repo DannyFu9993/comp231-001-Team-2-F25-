@@ -5,6 +5,18 @@
 // API endpoint configuration
 const API_URL = 'http://localhost:5000/api';
 
+document.addEventListener("DOMContentLoaded", () => {
+    const logoutBtn = document.getElementById("logoutBtn");
+    if (logoutBtn) {
+        logoutBtn.addEventListener("click", () => {
+            clearAuth();
+            window.location.href = "login.html";
+        });
+    }
+});
+
+
+
 // Check if user is logged in
 function isLoggedIn() {
     return localStorage.getItem('token') !== null;
