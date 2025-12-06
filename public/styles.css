@@ -301,3 +301,58 @@ form .btn {
     color: #2d5016;
 }
 
+/* ADD THIS TO YOUR styles.css FILE */
+.budget-section {
+    padding: 15px; /* Use padding for the budget area */
+    margin-top: 20px;
+    box-shadow: none; /* remove redundant card shadow if already in a card */
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #fcfcfc;
+}
+
+#progressBarContainerTx {
+  width: 90%;
+  margin: 15px auto 10px;
+  background-color: #f3f3f3;
+  border-radius: 5px;
+  overflow: hidden;
+  height: 25px;
+  position: relative;
+}
+#progressBarTx {
+  height: 100%;
+  width: 0%;
+  background-color: #4CAF50; /* Green */
+  text-align: right;
+  line-height: 25px;
+  color: white;
+  font-weight: bold;
+  padding-right: 5px;
+  transition: width 0.5s ease-in-out, background-color 0.5s;
+}
+#progressBarTx.warning {
+    background-color: #ffc107; /* Yellow */
+}
+#progressBarTx.danger {
+    background-color: #dc3545; /* Red */
+}
+#progressPercentTx {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  line-height: 25px;
+  color: #333;
+  font-weight: bold;
+  font-size: 14px;
+}
+#budgetFormTx {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+#budgetAmountTx {
+    flex-grow: 1;
+}
+

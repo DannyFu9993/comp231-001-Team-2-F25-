@@ -318,6 +318,7 @@ async function initTransactionsPage() {
         updateTotals(txs);
     }
 
+    // 🚩 UPDATED: This function now calls the new checkBudgetWarning
     function updateTotals(txs) {
         const income = txs.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0);
         const expense = txs.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0);
@@ -325,6 +326,9 @@ async function initTransactionsPage() {
         totalIncomeEl.textContent = formatCurrency(income);
         totalExpenseEl.textContent = formatCurrency(expense);
         totalBalanceEl.textContent = formatCurrency(balance);
+
+        // Call the new budget check function with the total expenses
+        checkBudgetWarning(expense);
     }
 
     form.addEventListener('submit', async (e) => {
@@ -341,8 +345,94 @@ async function initTransactionsPage() {
         } catch (err) { console.error('Create tx error', err); showMsg('Failed to add transaction', 'error'); }
     });
 
+    // 🚩 NEW BUDGET SYSTEM IMPLEMENTATION: Replaces the old simple localStorage logic
+    // ===============================
+    // BUDGET SYSTEM (localStorage + Progress Bar)
+    // ===============================
+
+    // Note: These element IDs must match the NEW HTML you add to transactions.html (e.g., budgetFormTx)
+    const budgetForm = document.getElementById("budgetFormTx");
+    const budgetAmountInput = document.getElementById("budgetAmountTx");
+    const currentBudgetEl = document.getElementById("currentBudgetTx");
+    const budgetWarningEl = document.getElementById("budgetWarningTx");
+    const progressBar = document.getElementById("progressBarTx");
+    const progressPercentEl = document.getElementById("progressPercentTx");
+
+    function loadBudget() {
+        const b = localStorage.getItem("budget");
+        return b ? parseFloat(b) : 0;
+    }
+
+    function saveBudget(amount) {
+        localStorage.setItem("budget", amount);
+    }
+
+    function updateBudgetUI() {
+        const budget = loadBudget();
+        // Use formatCurrency for clean display
+        currentBudgetEl.textContent = formatCurrency(budget);
+    }
+
+    // Function to check budget and update the progress bar
+    function checkBudgetWarning(totalExpense) {
+        const budget = loadBudget();
+        
+        let usedPercent = 0;
+        let barWidth = '0%';
+        let warningText = '';
+        
+        if (budget > 0) {
+            // Calculate usage percentage
+            usedPercent = Math.min(100, (totalExpense / budget) * 100);
+            barWidth = usedPercent > 100 ? '100%' : `${usedPercent.toFixed(2)}%`;
+            
+            // Determine warning text and bar color
+            if (totalExpense > budget) {
+                warningText = "⚠️ You have exceeded your monthly budget!";
+                if (progressBar) progressBar.className = 'danger'; // Red
+            } else if (totalExpense > budget * 0.8) {
+                warningText = "⚠️ You have used over 80% of your budget.";
+                if (progressBar) progressBar.className = 'warning'; // Yellow
+            } else {
+                warningText = "✅ Budget status is good.";
+                if (progressBar) progressBar.className = ''; // Green (default)
+            }
+        } else {
+            warningText = "Please set a budget to enable tracking.";
+            if (progressBar) progressBar.className = '';
+        }
+
+        if (budgetWarningEl) budgetWarningEl.textContent = warningText;
+        if (progressBar) progressBar.style.width = barWidth;
+        
+        // Update the progress percentage display
+        const percentValue = ((totalExpense / budget) * 100);
+        if (progressPercentEl) {
+             progressPercentEl.textContent = isFinite(percentValue) ? `${percentValue.toFixed(0)}% Used` : '0% Used';
+        }
+    }
+
+    // EVENT: Save budget
+    if (budgetForm) {
+        budgetForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const amount = parseFloat(budgetAmountInput.value);
+            if (!amount || amount <= 0) {
+                showMsg("Invalid budget amount", "error");
+                return;
+            }
+            saveBudget(amount);
+            updateBudgetUI();
+            showMsg("Budget updated!", "success");
+            // Re-render transactions to update totals and trigger checkBudgetWarning
+            renderTransactions();
+        });
+    }
+
     // initial render
     renderTransactions();
+    // 🚩 NEW: Load budget UI elements when the page initializes
+    updateBudgetUI();
 }
 
 // ===================================

@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transactions</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body class="transactions-page">
     <nav class="main-nav">
         <div class="nav-left">
             <img src="assets/logo.png" alt="Logo" class="nav-logo">
             <span class="nav-title">Budget & Expense</span>
         </div>
-    
+
         <div class="nav-links">
             <a href="dashboard.html">Dashboard</a>
             <a href="transactions.html">Transactions</a>
@@ -21,7 +23,7 @@
             <button id="logoutBtn" class="btn small">Logout</button>
         </div>
     </nav>
-    
+
 
     <div class="content">
         <div class="card">
@@ -47,6 +49,20 @@
                     <p>Expenses: <strong id="totalExpense">0.00</strong></p>
                     <p>Balance: <strong id="totalBalance">0.00</strong></p>
                 </div>
+<section class="budget-section card">
+                    <h4>Monthly Budget</h4>
+                    <form id="budgetFormTx">
+                        <input type="number" id="budgetAmountTx" placeholder="Set monthly budget" min="0" step="0.01" required />
+                        <button type="submit" class="btn small">Save</button>
+                    </form>
+                    <p>Current Budget: $<span id="currentBudgetTx">0.00</span></p>
+                    
+                    <div id="progressBarContainerTx">
+                        <div id="progressBarTx"></div>
+                        <span id="progressPercentTx">0% Used</span>
+                    </div>
+                    <p class="budget-warning" id="budgetWarningTx"></p>
+                </section>
 
                 <h4>Transactions</h4>
                 <ul id="transactionsList" class="transactions"></ul>
@@ -56,4 +72,5 @@
 
     <script src="app.js"></script>
 </body>
+
 </html>

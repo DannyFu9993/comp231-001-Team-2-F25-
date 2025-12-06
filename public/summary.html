@@ -73,8 +73,74 @@
       margin-top: 12px;
       text-align: center;
     }
-  </style>
 
+    /* Budget Section */
+    .budget-card {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      text-align: center;
+      display: none;
+    }
+    .budget-card input[type="number"] {
+      padding: 5px 10px;
+      width: 120px;
+      margin-right: 10px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    .budget-card button {
+      padding: 5px 12px;
+      border: none;
+      border-radius: 4px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+    .budget-warning {
+      color: red;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    /* Progress Bar Styles */
+    #progressBarContainer {
+      width: 80%;
+      margin: 15px auto 10px;
+      background-color: #f3f3f3;
+      border-radius: 5px;
+      overflow: hidden;
+      height: 25px;
+      position: relative;
+    }
+    #progressBar {
+      height: 100%;
+      width: 0%;
+      background-color: #4CAF50; /* Green */
+      text-align: right;
+      line-height: 25px;
+      color: white;
+      font-weight: bold;
+      padding-right: 5px;
+      transition: width 0.5s ease-in-out, background-color 0.5s;
+    }
+    #progressBar.warning {
+        background-color: #ffc107; /* Yellow */
+    }
+    #progressBar.danger {
+        background-color: #dc3545; /* Red */
+    }
+    #progressPercent {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      line-height: 25px;
+      color: #333;
+      font-weight: bold;
+      font-size: 14px;
+    }
+  </style>
 </head>
 <body class="transactions-page">
   <nav class="main-nav">
@@ -90,9 +156,7 @@
         <a href="summary.html">Summary</a>
         <button id="logoutBtn" class="btn small">Logout</button>
     </div>
-</nav>
-
-  <!-- GLOBAL NAVBAR WILL BE HERE -->
+  </nav>
 
   <div class="content">
 
@@ -101,14 +165,13 @@
       <p>Email: <strong id="userEmail"></strong></p>
     </div>
 
-    <!-- Tabs -->
     <div class="summary-tabs">
       <div class="tab-btn active" data-type="summary">SUMMARY</div>
       <div class="tab-btn" data-type="expense">EXPENSE</div>
       <div class="tab-btn" data-type="income">INCOME</div>
+      <div class="tab-btn" data-type="budget">BUDGET</div>
     </div>
 
-    <!-- Time Filters -->
     <div class="time-filters">
       <button class="filter-btn active" data-range="all">All</button>
       <button class="filter-btn" data-range="daily">Daily</button>
@@ -117,13 +180,11 @@
       <button class="filter-btn" data-range="yearly">Yearly</button>
     </div>
 
-    <!-- Chart -->
-    <div class="card donut-container">
+    <div class="card donut-container" id="chartContainer">
       <canvas id="categoryChart"></canvas>
     </div>
 
-    <!-- Category Table -->
-    <div class="card">
+    <div class="card" id="tableContainer">
       <table class="summary-table">
         <thead>
           <tr>
@@ -135,6 +196,21 @@
         <tbody id="categoryTableBody"></tbody>
       </table>
       <div class="summary-total" id="summaryTotal"></div>
+    </div>
+
+    <div class="card budget-card" id="budgetContainer">
+      <h3>Set Your Monthly Budget</h3>
+      <form id="budgetForm">
+        <input type="number" id="budgetAmount" placeholder="Enter budget" min="0" step="0.01">
+        <button type="submit">Set Budget</button>
+      </form>
+      <p>Current Budget: $<span id="currentBudget">0.00</span></p>
+
+      <div id="progressBarContainer">
+        <div id="progressBar"></div>
+        <span id="progressPercent">0% Used</span>
+      </div>
+      <p class="budget-warning" id="budgetWarning"></p>
     </div>
 
   </div>
@@ -158,10 +234,9 @@
       });
       const data = await res.json();
       allTx = data.transactions || [];
-      updateChart();
+      updateSummary();
     }
 
-    // Time range filtering
     function filterByRange(tx) {
       const date = new Date(tx.date);
       const now = new Date();
@@ -177,7 +252,6 @@
       }
     }
 
-    // Calculate data for selected tab + range
     function prepareData() {
       let filtered = allTx.filter(filterByRange);
 
@@ -186,7 +260,6 @@
       if (currentType === "expense")
         filtered = filtered.filter(x => x.type === "expense");
 
-      // Group by category
       const categories = {};
       filtered.forEach(tx => {
         if (!categories[tx.description]) categories[tx.description] = 0;
@@ -196,32 +269,30 @@
       return categories;
     }
 
-    // Draw donut chart + table
     function updateChart() {
+      if (currentType === "budget") return; 
+
       const data = prepareData();
       const labels = Object.keys(data);
       const values = Object.values(data);
       const total = values.reduce((a, b) => a + b, 0);
 
-      // Update table
       const tbody = document.getElementById("categoryTableBody");
       tbody.innerHTML = "";
       labels.forEach((cat, i) => {
-        const percent = ((values[i] / total) * 100).toFixed(2);
+        const percent = total ? ((values[i] / total) * 100).toFixed(2) : 0; 
         tbody.innerHTML += `
           <tr>
             <td>${cat}</td>
-            <td>$${values[i]}</td>
+            <td>$${values[i].toFixed(2)}</td>
             <td>${percent}%</td>
           </tr>
         `;
       });
 
-      // Update total
       document.getElementById("summaryTotal").textContent =
-        `${currentType.toUpperCase()} Total: $${total}`;
+        `${currentType.toUpperCase()} Total: $${total.toFixed(2)}`;
 
-      // Render donut chart
       if (chart) chart.destroy();
       const ctx = document.getElementById("categoryChart").getContext("2d");
 
@@ -245,13 +316,110 @@
       });
     }
 
-    // Tab switching
+    // ===============================
+    // Budget system
+    // ===============================
+    const budgetForm = document.getElementById("budgetForm");
+    const budgetAmountInput = document.getElementById("budgetAmount");
+    const currentBudgetEl = document.getElementById("currentBudget");
+    const budgetWarningEl = document.getElementById("budgetWarning");
+    const budgetContainer = document.getElementById("budgetContainer");
+    const chartContainer = document.getElementById("chartContainer");
+    const tableContainer = document.getElementById("tableContainer");
+
+    // New Progress Bar elements
+    const progressBar = document.getElementById("progressBar");
+    const progressPercentEl = document.getElementById("progressPercent");
+
+    function loadBudget() {
+      const b = localStorage.getItem("budget");
+      return b ? parseFloat(b) : 0;
+    }
+
+    function saveBudget(amount) {
+      localStorage.setItem("budget", amount);
+    }
+
+    function updateBudgetUI() {
+      const budget = loadBudget();
+      currentBudgetEl.textContent = budget.toFixed(2);
+      checkBudgetWarning(budget); // Pass budget to avoid re-loading
+    }
+
+    function checkBudgetWarning(budget) {
+      const totalExpense = allTx
+        .filter(tx => tx.type === "expense")
+        .filter(filterByRange)
+        .reduce((sum, tx) => sum + Number(tx.amount), 0);
+
+      let usedPercent = 0;
+      let barWidth = '0%';
+      let warningText = '';
+
+      if (budget > 0) {
+        usedPercent = Math.min(100, (totalExpense / budget) * 100);
+        barWidth = usedPercent > 100 ? '100%' : `${usedPercent.toFixed(2)}%`;
+        
+        // Update Warning Text
+        if (totalExpense > budget) {
+          warningText = "⚠️ You have exceeded your budget!";
+          progressBar.className = 'danger'; // Red
+        } else if (totalExpense > budget * 0.8) {
+          warningText = "⚠️ You have used over 80% of your budget.";
+          progressBar.className = 'warning'; // Yellow
+        } else {
+          warningText = "✅ Budget status is good.";
+          progressBar.className = ''; // Green
+        }
+      } else {
+        warningText = "Please set a budget to enable tracking.";
+        progressBar.className = '';
+      }
+
+      budgetWarningEl.textContent = warningText;
+      progressBar.style.width = barWidth;
+      
+      // Update the progress percentage display
+      const percentValue = ((totalExpense / budget) * 100);
+      progressPercentEl.textContent = isFinite(percentValue) ? `${percentValue.toFixed(0)}% Used` : '0% Used';
+    }
+
+    budgetForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const amount = parseFloat(budgetAmountInput.value);
+      if (!amount || amount <= 0) {
+        alert("Invalid budget amount");
+        return;
+      }
+      saveBudget(amount);
+      updateBudgetUI();
+      // Switch back to SUMMARY tab after setting budget
+      document.querySelector('.tab-btn.active')?.classList.remove('active');
+      document.querySelector('[data-type="summary"]').classList.add('active');
+      currentType = "summary";
+      updateSummary();
+    });
+
+    // Tab switching with budget logic
     document.querySelectorAll(".tab-btn").forEach(btn => {
       btn.addEventListener("click", () => {
         document.querySelector(".tab-btn.active").classList.remove("active");
         btn.classList.add("active");
         currentType = btn.dataset.type;
-        updateChart();
+
+        if (currentType === "budget") {
+          chartContainer.style.display = "none";
+          tableContainer.style.display = "none";
+          budgetContainer.style.display = "block";
+          document.querySelector(".time-filters").style.display = "none";
+        } else {
+          chartContainer.style.display = "block";
+          tableContainer.style.display = "block";
+          budgetContainer.style.display = "none";
+          document.querySelector(".time-filters").style.display = "flex";
+        }
+
+        updateSummary();
       });
     });
 
@@ -261,12 +429,20 @@
         document.querySelector(".filter-btn.active").classList.remove("active");
         btn.classList.add("active");
         currentRange = btn.dataset.range;
-        updateChart();
+        updateSummary();
       });
     });
 
-    loadTransactions();
-  </script>
+    function updateSummary() {
+      updateChart();
+      updateBudgetUI();
+    }
 
+    // Initial load
+    loadTransactions();
+    // Simulate initial tab click to set the visibility of containers
+    document.querySelector('.tab-btn.active')?.click(); 
+
+  </script>
 </body>
 </html>
