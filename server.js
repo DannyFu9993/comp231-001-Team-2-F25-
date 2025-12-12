@@ -12,9 +12,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-const profileRoutes = require('./src/routes/profile')(pool, verifyToken);
-app.use('/api/profile', profileRoutes);
-
 // MySQL connection pool
 const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
@@ -79,6 +76,10 @@ const verifyToken = (req, res, next) => {
   req.userEmail = session.email;
   next();
 };
+
+// Profile routes (moved here after pool and verifyToken are defined)
+const profileRoutes = require('./src/routes/profile')(pool, verifyToken);
+app.use('/api/profile', profileRoutes);
 
 // Register
 app.post('/api/auth/register', async (req, res) => {
